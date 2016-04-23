@@ -13,6 +13,7 @@ public class MainWindow extends JFrame implements KeyListener{
 	private Timer timer;
 	
 	private Image img;
+	private Image imgPlayer;
 	private BufferedImage bf;
 	private Graphics gTemp;
 	
@@ -20,9 +21,15 @@ public class MainWindow extends JFrame implements KeyListener{
 	private float img2;
 	private float img3;
 	
+	private playerOne pOne;
+	private boolean up;
+	private boolean right;
+	private boolean left;
+	private boolean down;
+	
 	public void gameLoop(){
 		timer = new Timer();
-		timer.schedule(new theGameLoop(), 0, 1000 / 15);
+		timer.schedule(new theGameLoop(), 0, 1000 / 60);
 	}
 	
 	private class theGameLoop extends TimerTask{
@@ -46,6 +53,11 @@ public class MainWindow extends JFrame implements KeyListener{
 		img2 = -1080.0f;
 		img3 = -2160.0f;
 		
+		up = false;
+		right = false;
+		left = false;
+		down = false;
+		
 		drawMap();
 		
 		con = getContentPane();
@@ -53,6 +65,8 @@ public class MainWindow extends JFrame implements KeyListener{
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		int width = gd.getDisplayMode().getWidth();
 		int height = gd.getDisplayMode().getHeight();
+		
+		pOne = new playerOne(width/2, height-50, 50);
 		
 		setTitle("#C:GAMING#");
 		setSize(width,height);
@@ -62,7 +76,11 @@ public class MainWindow extends JFrame implements KeyListener{
 		addKeyListener(this);
 		setFocusable(true);
 		
+		setExtendedState(JFrame.MAXIMIZED_BOTH); 
+		setUndecorated(true);
+		
 		img = Toolkit.getDefaultToolkit().createImage("img/pic.png");
+		imgPlayer = Toolkit.getDefaultToolkit().createImage("img/xwing_2.png");
 		
 		//Build up UI design/layout
 		
@@ -82,8 +100,9 @@ public class MainWindow extends JFrame implements KeyListener{
 		gTemp.drawImage(img, 0, (int)img2, this);
 		gTemp.drawImage(img, 0, (int)img3, this);
 		
+		gTemp.drawImage(imgPlayer, (int)pOne.xPos, (int)pOne.yPos, this);
+
 		g.drawImage(bf, 0, 0, this);
-        
     }
 	
 	public void update() throws InterruptedException{
@@ -100,10 +119,19 @@ public class MainWindow extends JFrame implements KeyListener{
         	img3 = -2160.0f;
         }
 		
+		if(up && pOne.yPos >= 0){
+			pOne.yPos = pOne.yPos-=5f;
+		}if(right && pOne.xPos < (1920 - pOne.size)){
+			pOne.xPos = pOne.xPos+=5f;
+		}if(left && pOne.xPos >= 0){
+			pOne.xPos = pOne.xPos-=5f;
+		}if(down && pOne.yPos < (1080 - pOne.size)){
+			pOne.yPos = pOne.yPos+=5f;
+		}
+		
 		render();
 		//check game if gameover?
 		//Colistioncheck
-				
 	}
 	
 	public void render(){
@@ -119,24 +147,43 @@ public class MainWindow extends JFrame implements KeyListener{
 	public void keyPressed(KeyEvent e){
 		
 		if(e.getKeyCode() == KeyEvent.VK_UP){
-			render();
+			up = true;
 		}
 		
 		if(e.getKeyCode() == KeyEvent.VK_RIGHT){
-			render();
+			right = true;
 		}
 		
 		if(e.getKeyCode() == KeyEvent.VK_LEFT){
-			render();
+			left = true;
 		}
 		
 		if(e.getKeyCode() == KeyEvent.VK_DOWN){
-			render();
+			down = true;
+		}
+		
+		if(e.getKeyCode() == KeyEvent.VK_ESCAPE){
+			System.exit(0);
 		}
 	}
 	
 	@Override
 	public void keyReleased(KeyEvent e) {
+		if(e.getKeyCode() == KeyEvent.VK_UP){
+			up = false;
+		}
+		
+		if(e.getKeyCode() == KeyEvent.VK_RIGHT){
+			right = false;
+		}
+		
+		if(e.getKeyCode() == KeyEvent.VK_LEFT){
+			left = false;
+		}
+		
+		if(e.getKeyCode() == KeyEvent.VK_DOWN){
+			down = false;
+		}
 	}
 
 	@Override
