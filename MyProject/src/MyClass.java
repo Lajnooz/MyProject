@@ -14,6 +14,10 @@ public class MyClass {
 		System.out.println("Hej");
 		System.out.println("Hej");
 		System.out.println("Hej");
+		
+		
+		int a = 5;
+		
 	}
 
 }
