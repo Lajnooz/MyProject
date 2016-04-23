@@ -1,8 +1,9 @@
+import java.io.FileNotFoundException;
+
 
 public class MyClass {
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		System.out.println("TEHRE CAN BE ONLY ONE!!!");
+	public static void main(String[] args) throws InterruptedException, FileNotFoundException {
+		MainWindow w1 = new MainWindow();
 	}
 }
