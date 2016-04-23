@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -10,7 +11,11 @@ import java.util.TimerTask;
 public class MainWindow extends JFrame implements KeyListener{
 
 	private Timer timer;
+	
 	private Image img;
+	private BufferedImage bf;
+	private Graphics gTemp;
+	
 	private float img1;
 	private float img2;
 	private float img3;
@@ -69,18 +74,23 @@ public class MainWindow extends JFrame implements KeyListener{
 	}
 
 	public void paint(Graphics g) {
-        super.paint(g);
-        g.drawImage(img, 0, (int)img1, this);
-        g.drawImage(img, 0, (int)img2, this);
-        g.drawImage(img, 0, (int)img3, this);
+
+		bf = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		gTemp = bf.getGraphics();
+		
+		gTemp.drawImage(img, 0, (int)img1, this);
+		gTemp.drawImage(img, 0, (int)img2, this);
+		gTemp.drawImage(img, 0, (int)img3, this);
+		
+		g.drawImage(bf, 0, 0, this);
         
     }
 	
 	public void update() throws InterruptedException{
 		
-		img1+=10;
-		img2+=10;
-		img3+=10;
+		img1+=2;
+		img2+=2;
+		img3+=2;
 		
 		if(img1 > 1079){
 			img1 = -2160.0f;
