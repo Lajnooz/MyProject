@@ -5,27 +5,53 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainWindow extends JFrame implements KeyListener{
-
-	private Timer timer;
+	static Container con;
 	
-	private Image img;
-	private Image imgPlayer;
-	private BufferedImage bf;
+	private Timer timer;
+	private Random rand;
+	
+	private int screenWidth;
+	private int screenHeight;
+	
+	private static final int PLAYER_SIZE = 102;
+	private static final float PLAYER_SPEED = 5.0f;
+	private static final int ENEMY_SIZE = 102;
+	private static final float BG_SPEED = 2.0f;
+	private static final int MAX_ENEMIES = 10;
+	
+	private Image backgroundSprite;
+	private Image playerSprite;
+	private Image enemy1Sprite;
+	private BufferedImage bi;
 	private Graphics gTemp;
 	
-	private float img1;
-	private float img2;
-	private float img3;
+	private float bg1;
+	private float bg2;
+	private float bg3;
 	
-	private playerOne pOne;
+	private Player player;
+	
 	private boolean up;
 	private boolean right;
 	private boolean left;
 	private boolean down;
+	
+	private int maxEnemies;
+	private ArrayList<Enemy> enemies;
+	private int enemyCounter;
+	private Enemy tempEnemy;
+	
+	private Rectangle rect;
+	private Rectangle enemyRect;
+	private Rectangle enemyCheckRect;
+	private boolean spawnSuccess;
+	
 	
 	public void gameLoop(){
 		timer = new Timer();
@@ -33,7 +59,6 @@ public class MainWindow extends JFrame implements KeyListener{
 	}
 	
 	private class theGameLoop extends TimerTask{
-		
 		public void run(){
 			try {
 				update();
@@ -43,33 +68,28 @@ public class MainWindow extends JFrame implements KeyListener{
 		}
 	}
 	
-	static Container con;
-	
 	MainWindow() throws InterruptedException, FileNotFoundException{
+		con = getContentPane();
+		rand = new Random();
 		
-		//Initiate UI-Element
-		//Create game object
-		img1 = 0.0f;
-		img2 = -1080.0f;
-		img3 = -2160.0f;
+		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+		screenWidth = gd.getDisplayMode().getWidth();
+		screenHeight = gd.getDisplayMode().getHeight();
+		
+		bg1 = 0.0f;
+		bg2 = -screenHeight;
+		bg3 = -screenHeight*2;
 		
 		up = false;
 		right = false;
 		left = false;
 		down = false;
 		
-		drawMap();
-		
-		con = getContentPane();
-		
-		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-		int width = gd.getDisplayMode().getWidth();
-		int height = gd.getDisplayMode().getHeight();
-		
-		pOne = new playerOne((width/2)-102, height-102, 102);
+		player = new Player((screenWidth/2)-PLAYER_SIZE, screenHeight-PLAYER_SIZE, PLAYER_SIZE);
+		enemies = new ArrayList<Enemy>();
 		
 		setTitle("#C:GAMING#");
-		setSize(width,height);
+		setSize(screenWidth,screenHeight);
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
@@ -79,66 +99,125 @@ public class MainWindow extends JFrame implements KeyListener{
 		setExtendedState(JFrame.MAXIMIZED_BOTH); 
 		setUndecorated(true);
 		
-		img = Toolkit.getDefaultToolkit().createImage("img/pic.png");
-		imgPlayer = Toolkit.getDefaultToolkit().createImage("img/xwing_2.png");
+		backgroundSprite = Toolkit.getDefaultToolkit().createImage("img/pic.png");
+		playerSprite = Toolkit.getDefaultToolkit().createImage("img/xwing_2.png");
+		enemy1Sprite = Toolkit.getDefaultToolkit().createImage("img/enemy1.png");
 		
+		maxEnemies = MAX_ENEMIES;
+		enemyCounter = 0;
 		//Build up UI design/layout
+		
 		
 		//Add to container object
 		setVisible(true);
 		
-		//isRunning = true;
 		gameLoop();
 	}
 
 	public void paint(Graphics g) {
-
-		bf = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
-		gTemp = bf.getGraphics();
+		bi = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		gTemp = bi.getGraphics();
 		
-		gTemp.drawImage(img, 0, (int)img1, this);
-		gTemp.drawImage(img, 0, (int)img2, this);
-		gTemp.drawImage(img, 0, (int)img3, this);
+		gTemp.drawImage(backgroundSprite, 0, (int)bg1, this);
+		gTemp.drawImage(backgroundSprite, 0, (int)bg2, this);
+		gTemp.drawImage(backgroundSprite, 0, (int)bg3, this);
 		
-		gTemp.drawImage(imgPlayer, (int)pOne.xPos, (int)pOne.yPos, this);
-
-		g.drawImage(bf, 0, 0, this);
+		gTemp.drawImage(playerSprite, (int)player.getX(), (int)player.getY(), this);
+		
+		for(Enemy e : enemies)
+			gTemp.drawImage(enemy1Sprite, (int)e.getX(), (int)e.getY(), this);
+		
+		g.drawImage(bi, 0, 0, this);
     }
 	
 	public void update() throws InterruptedException{
-		
-		img1+=2;
-		img2+=2;
-		img3+=2;
-		
-		if(img1 > 1079){
-			img1 = -2160.0f;
-        }else if(img2 > 1079){
-        	img2 = -2160.0f;
-        }else if(img3 > 1079){
-        	img3 = -2160.0f;
-        }
-		
-		if(up && pOne.yPos >= 0){
-			pOne.yPos = pOne.yPos-=5f;
-		}if(right && pOne.xPos < (1920 - pOne.size)){
-			pOne.xPos = pOne.xPos+=5f;
-		}if(left && pOne.xPos >= 0){
-			pOne.xPos = pOne.xPos-=5f;
-		}if(down && pOne.yPos < (1080 - pOne.size)){
-			pOne.yPos = pOne.yPos+=5f;
-		}
-		
+		drawMap();
+		movePlayer();
+		updateEnemies();
+		randomSpawnEnemy();
 		render();
-		//check game if gameover?
-		//Colistioncheck
 	}
 	
 	public void render(){
 		this.repaint();
 	}
 	
+	private Enemy newEnemy(){
+		tempEnemy = new Enemy(rand.nextInt(screenWidth-ENEMY_SIZE), rand.nextInt(3)+3, ENEMY_SIZE);
+		
+		enemyRect = new Rectangle((int)tempEnemy.getX(),(int)tempEnemy.getY(),tempEnemy.getSize(), tempEnemy.getSize());
+		while(!spawnSuccess){
+			spawnSuccess = true;
+			for(int i=0; i<enemies.size(); i++){
+				enemyCheckRect = new Rectangle((int)enemies.get(i).getX(),(int)enemies.get(i).getY(), enemies.get(i).getSize(), enemies.get(i).getSize());
+				if(enemyRect.intersects(enemyCheckRect)){
+					spawnSuccess = false;
+					tempEnemy.setX(rand.nextInt(screenWidth-tempEnemy.getSize()));
+					enemyRect = new Rectangle((int)tempEnemy.getX(),(int)tempEnemy.getY(),tempEnemy.getSize(), tempEnemy.getSize());
+					break;
+				}
+			}
+		}
+		return tempEnemy;
+	}
+	
 	public void drawMap(){
+		bg1+=BG_SPEED;
+		bg2+=BG_SPEED;
+		bg3+=BG_SPEED;
+		
+		if(bg1 > screenHeight-1 ){
+			bg1 = -screenHeight*2;
+        }else if(bg2 > screenHeight-1){
+        	bg2 = -screenHeight*2;
+        }else if(bg3 > screenHeight-1){
+        	bg3 = -screenHeight*2;
+        }
+	}
+	
+	public void movePlayer(){
+		if(up && player.getY() >= 0){
+			player.move(Player.UP, PLAYER_SPEED);
+		}if(right && player.getX() < (screenWidth - player.getSize())){
+			player.move(Player.RIGHT, PLAYER_SPEED);
+		}if(left && player.getX() >= 0){
+			player.move(Player.LEFT, PLAYER_SPEED);
+		}if(down && player.getY() < (screenHeight - player.getSize())){
+			player.move(Player.DOWN, PLAYER_SPEED);
+		}
+	}
+	
+	public void updateEnemies(){
+		rect = new Rectangle((int)player.getX(),(int)player.getY(),(int)player.getSize(), (int)player.getSize());
+		enemyRect = null;
+		enemyCheckRect = null;
+		spawnSuccess = false;
+		
+		for (int j = 0; j<enemies.size(); j++){
+			spawnSuccess = false;
+			enemies.get(j).move();
+			
+			enemyRect = new Rectangle((int)enemies.get(j).getX(),(int)enemies.get(j).getY(),enemies.get(j).getSize(), enemies.get(j).getSize());
+			if(rect.intersects(enemyRect)){
+				System.exit(0);
+			}
+			
+			if(enemies.get(j).getY()> screenHeight-1){
+				enemies.remove(j);
+				enemies.add(newEnemy());
+			}
+		}
+	}
+	
+	public void randomSpawnEnemy(){
+		enemyCounter++;
+		spawnSuccess = false;
+		if(enemyCounter >= 100 && maxEnemies>enemies.size()){
+			if(rand.nextInt(100)>=95){
+				enemies.add(newEnemy());
+				enemyCounter = 0;
+			}
+		}
 	}
 	
 	public void clearMap(){
