@@ -64,6 +64,7 @@ public class MainWindow extends JFrame implements KeyListener{
 	private int enemyCounter;
 	private Enemy tempEnemy;
 	
+	private Rectangle rect;
 	private Rectangle enemyRect;
 	private Rectangle enemyCheckRect;
 	private boolean spawnSuccess;
@@ -88,6 +89,9 @@ public class MainWindow extends JFrame implements KeyListener{
 			try {
 				update();
 			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -191,7 +195,7 @@ public class MainWindow extends JFrame implements KeyListener{
 		g.drawImage(bi, 0, 0, this);
     }
 	
-	public void update() throws InterruptedException{
+	public void update() throws InterruptedException, FileNotFoundException{
 		drawMap();
 		movePlayer();
 		shoot();
@@ -248,6 +252,13 @@ public class MainWindow extends JFrame implements KeyListener{
 		}if(down && player.getY() < (screenHeight - player.getSize())){
 			player.move(Player.DOWN, PLAYER_SPEED);
 		}
+
+		playerPolyg = new Polygon();
+		
+		for(Point p : playerPolygPoints){
+			playerPolyg.addPoint((int)(p.x+player.getX()), (int)(p.y+player.getY()));
+		}
+		
 	}
 	
 	public void shoot(){
@@ -266,26 +277,18 @@ public class MainWindow extends JFrame implements KeyListener{
 				
 				if(rect.intersects(enemyRect)){
 					enemies.remove(j);
+					sh.addCurrentScore(10);
 					shots.remove(i);
 				}
-				
-				
 			}
 		}
 		
 		for(int i = 0; i<shots.size(); i++){
 			shots.get(i).move(SHOOT_SPEED);
 		}
-		
-		playerPolyg = new Polygon();
-		
-		for(Point p : playerPolygPoints){
-			playerPolyg.addPoint((int)(p.x+player.getX()), (int)(p.y+player.getY()));
-		}
-		
 	}
 	
-	public void updateEnemies(){
+	public void updateEnemies() throws FileNotFoundException{
 		enemyPolyg = null;
 		area1 = new Area(playerPolyg);
 		for (int j = 0; j<enemies.size(); j++){
@@ -298,6 +301,7 @@ public class MainWindow extends JFrame implements KeyListener{
 			area2 = new Area(enemyPolyg);	//Convert to area, for collision detection
 			area2.intersect(area1);			//Intersect into area2, if resulting area2 is empty = no collision
 			if(!area2.isEmpty()){
+				sh.CheckIfNewHighScore();
 				System.exit(0);
 			}
 			
