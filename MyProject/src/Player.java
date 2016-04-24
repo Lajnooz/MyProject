@@ -52,7 +52,4 @@ public class Player {
 	public void setSize(float size) {
 		this.size = size;
 	}
-	
-	
-	
 }
