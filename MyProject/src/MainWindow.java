@@ -66,7 +66,7 @@ public class MainWindow extends JFrame implements KeyListener{
 		int width = gd.getDisplayMode().getWidth();
 		int height = gd.getDisplayMode().getHeight();
 		
-		pOne = new playerOne(width/2, height-50, 50);
+		pOne = new playerOne((width/2)-102, height-102, 102);
 		
 		setTitle("#C:GAMING#");
 		setSize(width,height);
