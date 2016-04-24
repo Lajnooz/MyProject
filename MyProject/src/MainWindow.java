@@ -15,15 +15,24 @@ public class MainWindow extends JFrame implements KeyListener{
 	private static final boolean SHOW_COLLISION_POLYGONS = false;
 	
 	static Container con;
+
+	JPanel sideBar;
+	
+	JLabel score;
+	JLabel theScore;
+	JLabel highScore;
+	JLabel theHighScore;
 	
 	private Timer timer;
 	private Random rand;
+	
+	private ScoreHandler sh;
 	
 	private int screenWidth;
 	private int screenHeight;
 	
 	private static final int PLAYER_SIZE = 102;
-	private static final float PLAYER_SPEED = 5.0f;
+	private static final float PLAYER_SPEED = 10.0f;
 	private static final int ENEMY_SIZE = 102;
 	private static final float BG_SPEED = 2.0f;
 	private static final int MAX_ENEMIES = 10;
@@ -83,6 +92,8 @@ public class MainWindow extends JFrame implements KeyListener{
 		con = getContentPane();
 		rand = new Random();
 		
+		sh = new ScoreHandler();
+		
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		screenWidth = gd.getDisplayMode().getWidth();
 		screenHeight = gd.getDisplayMode().getHeight();
@@ -117,7 +128,24 @@ public class MainWindow extends JFrame implements KeyListener{
 		maxEnemies = MAX_ENEMIES;
 		enemyCounter = 0;
 		//Build up UI design/layout
+		/*
+		sideBar = new JPanel();
 		
+		score = new JLabel("SCORE");
+		score.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		theScore = new JLabel("0");
+		theScore.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		highScore = new JLabel("HIGHSCORE");
+		highScore.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		theHighScore = new JLabel(""+sh.ReadHighScore());
+		theHighScore.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		
+		sideBar.add(score);
+		sideBar.add(theScore);
+		sideBar.add(highScore);
+		sideBar.add(theHighScore);
+		*/
+
 		//Add to container object
 		setVisible(true);
 		
@@ -165,7 +193,7 @@ public class MainWindow extends JFrame implements KeyListener{
 	}
 	
 	private Enemy newEnemy(){
-		tempEnemy = new Enemy(rand.nextInt(screenWidth-ENEMY_SIZE), rand.nextInt(3)+3, ENEMY_SIZE);
+		tempEnemy = new Enemy(rand.nextInt(screenWidth-ENEMY_SIZE), rand.nextInt(20)+3, ENEMY_SIZE);
 		
 		enemyRect = new Rectangle((int)tempEnemy.getX(),(int)tempEnemy.getY(),tempEnemy.getSize(), tempEnemy.getSize());
 		while(!spawnSuccess){
