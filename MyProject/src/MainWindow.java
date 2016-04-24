@@ -27,7 +27,9 @@ public class MainWindow extends JFrame implements KeyListener{
 	private static final int ENEMY_SIZE = 102;
 	private static final float BG_SPEED = 2.0f;
 	private static final int MAX_ENEMIES = 10;
+	private static final float SHOOT_SPEED = 7.0f;
 	
+	private Image playerShotSprite;
 	private Image backgroundSprite;
 	private Image playerSprite;
 	private Image enemy1Sprite;
@@ -44,6 +46,9 @@ public class MainWindow extends JFrame implements KeyListener{
 	private boolean right;
 	private boolean left;
 	private boolean down;
+	
+	private boolean shoot;
+	private ArrayList<Shot> shots;
 	
 	private int maxEnemies;
 	private ArrayList<Enemy> enemies;
@@ -95,9 +100,11 @@ public class MainWindow extends JFrame implements KeyListener{
 		right = false;
 		left = false;
 		down = false;
+		shoot = false;
 		
 		player = new Player((screenWidth/2)-PLAYER_SIZE, screenHeight-PLAYER_SIZE, PLAYER_SIZE);
 		enemies = new ArrayList<Enemy>();
+		shots = new ArrayList<Shot>();
 		
 		setTitle("#C:GAMING#");
 		setSize(screenWidth,screenHeight);
@@ -112,6 +119,7 @@ public class MainWindow extends JFrame implements KeyListener{
 		
 		backgroundSprite = Toolkit.getDefaultToolkit().createImage("img/pic.png");
 		playerSprite = Toolkit.getDefaultToolkit().createImage("img/xwing_2.png");
+		playerShotSprite = Toolkit.getDefaultToolkit().createImage("img/playerShotSprite.png");
 		enemy1Sprite = Toolkit.getDefaultToolkit().createImage("img/enemy1.png");
 		
 		maxEnemies = MAX_ENEMIES;
@@ -134,6 +142,9 @@ public class MainWindow extends JFrame implements KeyListener{
 		
 		gTemp.drawImage(playerSprite, (int)player.getX(), (int)player.getY(), this);
 		
+		for(Shot e : shots)
+			gTemp.drawImage(playerShotSprite, (int)e.getX(), (int)e.getY(), this);
+		
 		for(Enemy e : enemies)
 			gTemp.drawImage(enemy1Sprite, (int)e.getX(), (int)e.getY(), this);
 		
@@ -155,6 +166,8 @@ public class MainWindow extends JFrame implements KeyListener{
 	public void update() throws InterruptedException{
 		drawMap();
 		movePlayer();
+		shoot();
+		moveShots();
 		updateEnemies();
 		randomSpawnEnemy();
 		render();
@@ -206,6 +219,34 @@ public class MainWindow extends JFrame implements KeyListener{
 			player.move(Player.LEFT, PLAYER_SPEED);
 		}if(down && player.getY() < (screenHeight - player.getSize())){
 			player.move(Player.DOWN, PLAYER_SPEED);
+		}
+	}
+	
+	public void shoot(){
+		if(shoot){
+			shots.add(new Shot((int)player.getX() + 35, (int)player.getY()));
+			gTemp.drawImage(playerShotSprite, (int)player.getX() + 35, (int)player.getY(), this);
+			shoot = false;
+		}
+	}
+	
+	public void moveShots(){
+		for(int i=0; i<shots.size(); i++){
+			rect = new Rectangle((int)shots.get(i).getX(),(int)shots.get(i).getY(),35,35);
+			for(int j=0; j<enemies.size(); j++){
+				enemyRect = new Rectangle((int)enemies.get(j).getX(),(int)enemies.get(j).getY(),enemies.get(j).getSize(), enemies.get(j).getSize());
+				
+				if(rect.intersects(enemyRect)){
+					enemies.remove(j);
+					shots.remove(i);
+				}
+				
+				
+			}
+		}
+		
+		for(int i = 0; i<shots.size(); i++){
+			shots.get(i).move(SHOOT_SPEED);
 		}
 		
 		playerPolyg = new Polygon();
@@ -292,6 +333,10 @@ public class MainWindow extends JFrame implements KeyListener{
 		
 		if(e.getKeyCode() == KeyEvent.VK_DOWN){
 			down = false;
+		}
+		
+		if(e.getKeyCode() == KeyEvent.VK_SPACE){
+			shoot = true;
 		}
 	}
 
