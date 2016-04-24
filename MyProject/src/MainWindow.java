@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.geom.Area;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -11,6 +12,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainWindow extends JFrame implements KeyListener{
+	private static final boolean SHOW_COLLISION_POLYGONS = false;
+	
 	static Container con;
 	
 	private Timer timer;
@@ -47,10 +50,18 @@ public class MainWindow extends JFrame implements KeyListener{
 	private int enemyCounter;
 	private Enemy tempEnemy;
 	
-	private Rectangle rect;
 	private Rectangle enemyRect;
 	private Rectangle enemyCheckRect;
 	private boolean spawnSuccess;
+	
+	Area area1;				//Collision detection
+	Area area2;
+	
+	private Polygon playerPolyg;
+	private static final Point[] playerPolygPoints = {new Point(45,2),new Point(56,2),new Point(56,50),new Point(60,50),new Point(60,43),new Point(68,43),new Point(68,48),new Point(70,48),new Point(70,62),new Point(93,62),new Point(93,40),new Point(101,40),new Point(101,68),new Point(72,80),new Point(70,96),new Point(60,96),new Point(51,84),new Point(41,96),new Point(31,96),new Point(29,80),new Point(0,68),new Point(0,40),new Point(8,40),new Point(8,62),new Point(31,62),new Point(31,48),new Point(34,48),new Point(33,43),new Point(41,43),new Point(41,50),new Point(45,50)};
+	
+	private Polygon enemyPolyg;
+	private static final Point[] enemyPolygPoints = {new Point(10,0),new Point(23,28),new Point(29,8),new Point(37,6),new Point(44,8),new Point(45,17),new Point(52,17),new Point(53,8),new Point(60,6),new Point(68,8),new Point(74,28),new Point(87,0),new Point(89,41),new Point(87,81),new Point(80,101),new Point(76,57),new Point(65,55),new Point(64,63),new Point(59,64),new Point(59,71),new Point(52,82),new Point(45,82),new Point(39,71),new Point(39,64),new Point(33,62),new Point(32,55),new Point(21,57),new Point(17,100),new Point(8,41)};
 	
 	
 	public void gameLoop(){
@@ -107,7 +118,6 @@ public class MainWindow extends JFrame implements KeyListener{
 		enemyCounter = 0;
 		//Build up UI design/layout
 		
-		
 		//Add to container object
 		setVisible(true);
 		
@@ -127,6 +137,18 @@ public class MainWindow extends JFrame implements KeyListener{
 		for(Enemy e : enemies)
 			gTemp.drawImage(enemy1Sprite, (int)e.getX(), (int)e.getY(), this);
 		
+		if(SHOW_COLLISION_POLYGONS){
+			gTemp.setColor(Color.RED);
+			gTemp.drawPolygon(playerPolyg);
+			
+			for (int j = 0; j<enemies.size(); j++){
+				enemyPolyg = new Polygon();
+				for(Point p : enemyPolygPoints){
+					enemyPolyg.addPoint((int)(p.x+enemies.get(j).getX()), (int)(p.y+enemies.get(j).getY()));
+				}
+				gTemp.drawPolygon(enemyPolyg);
+			}
+		}
 		g.drawImage(bi, 0, 0, this);
     }
 	
@@ -185,20 +207,28 @@ public class MainWindow extends JFrame implements KeyListener{
 		}if(down && player.getY() < (screenHeight - player.getSize())){
 			player.move(Player.DOWN, PLAYER_SPEED);
 		}
+		
+		playerPolyg = new Polygon();
+		
+		for(Point p : playerPolygPoints){
+			playerPolyg.addPoint((int)(p.x+player.getX()), (int)(p.y+player.getY()));
+		}
+		
 	}
 	
 	public void updateEnemies(){
-		rect = new Rectangle((int)player.getX(),(int)player.getY(),(int)player.getSize(), (int)player.getSize());
-		enemyRect = null;
-		enemyCheckRect = null;
-		spawnSuccess = false;
-		
+		enemyPolyg = null;
+		area1 = new Area(playerPolyg);
 		for (int j = 0; j<enemies.size(); j++){
-			spawnSuccess = false;
 			enemies.get(j).move();
 			
-			enemyRect = new Rectangle((int)enemies.get(j).getX(),(int)enemies.get(j).getY(),enemies.get(j).getSize(), enemies.get(j).getSize());
-			if(rect.intersects(enemyRect)){
+			enemyPolyg = new Polygon();
+			for(Point p : enemyPolygPoints){
+				enemyPolyg.addPoint((int)(p.x+enemies.get(j).getX()), (int)(p.y+enemies.get(j).getY()));
+			}
+			area2 = new Area(enemyPolyg);	//Convert to area, for collision detection
+			area2.intersect(area1);			//Intersect into area2, if resulting area2 is empty = no collision
+			if(!area2.isEmpty()){
 				System.exit(0);
 			}
 			
